@@ -1,0 +1,14 @@
+dist: xenial
+language: python
+addons:
+  apt:
+    update: true
+install:
+  - sudo apt-get install -y pandoc
+  - pip install mkdocs
+script:
+  - mkdocs --version
+  - ./org-mkdocs.sh
+branches:
+ only:
+ - master
