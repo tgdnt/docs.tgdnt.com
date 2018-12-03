@@ -1,0 +1,70 @@
+* Automatically sync your org-mobile data
+~org-mobile~ is an org-mode feature that creates a version of your org files for use with mobile apps that employ this standard. One such app is [[https://mobileorg.github.io/][MobileOrg]] for iOS. Actually it's the only one for iOS, as far as I know.
+
+~org-mobile~ is an org-mode feature that creates a copy of your org files in a directory, defined by the variable ~org-mobile-directory~, for a mobile app to read and edit them. Later on, ~org-mobile~ can read that changed data and incorporate those changes to your org files. It acts as a sort of proxy between your org files on mobile and those on your desktop. There are certain distinct advantages to using an ~org-mobile~-enabled mobile app:
+
+- it has its own encryption feature, ensuring all the data that is saved in the cloud remains private.
+- you can choose to stage only a subset of your org files. Most people are not likely to need access to all of your org directory when on mobile, so this feature can speed up synchronization.
+- it protects your org files from direct modification by the mobile app.
+- it allows for a controlled way to capture and modify notes while on mobile, allowing the user to review any changes before fully incorporating them. I think this is especially interesting to those that don't see mobile as a suitable platform in which to edit text.
+
+Other apps such as [[https://beorgapp.com/][beorg]] don't use ~org-mobile~, they simply use WebDAV or Dropbox to edit your org files directly. Though that seems convenient, it comes with the significant trade-off of storing your org files in plain text at Dropbox or elsewhere. And even if it had an encryption feature, you would have to decrypt the data on your desktop later on before you could work with it.
+
+Assuming one is happy with the process of capturing and editing files the ~org-mobile~ way, the problem with this method is that, unless you run your WebDAV server locally, it requires a two-step process where you first stage files in your ~org-mobile-directory~, then sync them to the cloud, either using a daemon or by manually transferring the data. It's easy to forget to update your org files before you start working with them and that can lead to a bit of a mess and loss of data. To solve this problem, I have added some Emacs configuration that uses ~rclone~ to sync the ~org-mobile-directory~ with Dropbox without even having their application installed.
+** How it works
+ Depending on how you use Emacs, you should add the following code to your ~.emacs.d~ or your ~init.el~ file. Since I use Spacemacs, I typed them into ~~/.spacemacs~ within the ~dotspacemacs/user-config~ function.
+
+ With the configurations below, every time you run ~org-mobile-push~, Emacs will first clear the ~org-mobile-directory~, then perform the normal operations of ~org-mobile-push~, and finally run ~rclone~ to sync that directory to the cloud. On the other end, every time you run ~org-mobile-pull~, Emacs will clear the mobileorg directory, sync the data back from the cloud, where it may have been updated by your mobile app and then perform ~org-mobile-pull~ normally.
+** Creating functions
+For the code snippets below, it is assumed that the local ~org-mobile-directory~ is ~~/mobileorg~ and the cloud service to be used is already configured in ~rclone~ as ~Dropbox~ and, within it, the ~org-mobile-directory~ is Apps/MobileOrg.
+
+Because ~org-mobile-push~ does not update the mobileorg directory but rather just pushes it, although it will overwrite any existing files, it won't remove org files that may have been deleted or removed from your list of files to be staged for MobileOrg. This does not really matter because your mobile application should only pick up what is listed in the ~index.org~ file. However, just to avoid syncing unnecessary data, I created a function to clean up the ~org-mobile-directory~ before pushing to it.
+
+#+BEGIN_SRC emacs-lisp
+(defun org-mobile-clean-before-push()
+  (with-temp-buffer(shell-command "rm ~/mobileorg/*" t)))
+#+END_SRC
+
+Note that ~shell-command~ appears within ~with-temp-buffer~. When you run ~shell-command~, Emacs will create a buffer containing the results of your command. With ~with-temp-buffer~, that buffer won't persist. We don't want to see those in this case, and they are normally going to be blank anyway.
+
+Next we define the function that will sync your pushed mobileorg directory via ~rclone~. Note that I have used the option ~--exclude \.DS_Store~ because I use Mac and the presence of those files was causing a problem.
+
+#+BEGIN_SRC emacs-lisp
+(defun org-mobile-rclone-sync-before-push()
+  (with-temp-buffer
+    (shell-command "rclone sync ~/mobileorg Dropbox:Apps/MobileOrg --exclude \.DS_Store" t)))
+#+END_SRC
+
+Since we only need to perform extra actions before ~org-mobile-pull~ runs, we can keep them both in the same function, so next will be essentially a combination of the above – we will clean the orgmobile directory and then update it from the cloud.
+
+#+BEGIN_SRC emacs-lisp
+(defun org-mobile-rclone-sync-before-pull()
+  (with-temp-buffer
+    (shell-command "rm ~/mobileorg/*" t)
+    (shell-command "rclone sync Dropbox:Apps/MobileOrg ~/mobileorg --exclude \.DS_Store" t)))
+#+END_SRC
+** Adding hooks
+Finally, we will add the functions we created to the appropriate hooks.
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'org-mobile-pre-push-hook 'org-mobile-clean-before-push)
+(add-hook 'org-mobile-post-push-hook 'org-mobile-rclone-sync-before-push)
+(add-hook 'org-mobile-pre-pull-hook 'org-mobile-rclone-sync-before-pull)
+#+END_SRC
+
+This doesn't eliminate the possibility that you may open Emacs and edit your files before manually running ~org-mobile-push~ or ~org-mobile-pull~, so we need to add hooks to run them as well. The ~kill-emacs-hook~ runs when you shutdown Emacs.
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'kill-emacs-hook 'org-mobile-push)
+#+END_SRC
+
+To perform an ~org-mobile-pull~ automatically at startup, add the following:
+
+#+BEGIN_SRC emacs-lisp
+(org-mode)
+(org-mobile-pull)
+#+END_SRC
+
+In my tests, if you don't first run ~org-mode~, the function ~org-mobile-pull~ will not have been defined, so it won't run at all. An unwanted side effect of this is that, in Spacemacs, when you use ~SPC f e R~ to reload your dotfile and apply your new changes, it will put your current buffer in org-mode, which is often not desirable, because you are likely to be editing your dotfile at the time, so you'd want to remain in emacs-lisp-mode. Therefore, it would be worth investigating other ways to achieve this.
+
+Another consideration is that, unless you use Emacs almost exclusively for org-mode, you would likely want to avoid running all this at startup, as it will slow it down considerably, even when you're just trying to quickly open a text file.

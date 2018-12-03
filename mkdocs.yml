@@ -1,5 +1,4 @@
 site_name: docs.tgdnt.com
 nav:
   - Home: home.md
-  - About: about.md
-theme: readthedocs
+  - Org: org
