@@ -4,11 +4,15 @@ addons:
   apt:
     update: true
 install:
-  - sudo apt-get install -y pandoc
-  - pip install mkdocs
+- sudo apt-get install -y pandoc
+- pip install mkdocs awscli
 script:
-  - mkdocs --version
-  - ./org-mkdocs.sh
+- mkdocs --version
+- "./org-mkdocs.sh"
 branches:
- only:
- - master
+  only:
+  - master
+env:
+  global:
+  - secure: hE5xH8sV+3WWwPSda6FRO/WdeK+5oGxVkBBRfB30C/4uzoqkZmxHcoOEv3FGyqcyutZ1ymbe1x2F2YRR+QIY4bVC9BFjS7ql2zzLOwb4nsDJiUjuYPk2eQWNd8ZtBU1rbmLq2LaSIqK2u0AqPxc/fw39DFOFWQV60mcbMVHnCwyF+yisFIvS1atsY8Ik4F9BlwfjrE3E95Dl+q4WO9j2NUtxfwvZe1orJuAQa0xg8tTmN78vssqJaPysqz2mmcSnQhajSRsp71FSRYPenQ2rZc23Vaz0OpiuBq5OYgmfdQxfkB793Sk8gM5/x4MuGLxgJsjTuel2V2zyUpf+Q61PsbuujlPLg/nB+bz0NnfjvSaqfKhbQmQdFxqPlXIXnmuWGzVTgK46N82fZ/aTU6Y9R/SCS8084n8vSSKHWk/ZZwu+28x3jJa4sArbMTKLUkt+LpLTOe6lFYerQOUSomcKAe0AVA9nSXk3Nbqgrt5YTjER/VaHg2GQeXkGfLOjR2m3l20FzOB1Q3FxwhWBGAW3eu03WUvaeZ4v6hYUKrAo32hqt2BDTDRLwFkecFGs1UN91QF8JY+85DmQV1mL1ocW1354DFxtcDqA+t+BKtjDeYMB925hkEB9BHcjLoC7HK+/1H28XoMq7TPKqszytg8Ez+Wjk254RbvB/noTokWIBRg=
+  - secure: JEX473OrxNyPvE/iF0u3Re+N218i5uTiRKTvX0ny0is4zzXzUKsIb4oTbP8UCle5L0uJXwa7fvC9iJOuvvZRP8nab1KJRN10P1gDgIuHxp2EXailDAvcnvK+Ifl42gHYdO1UXUWNOjt10V2e1v7yCRNzSk/ZEiS+qRZNkNDmeY/XBqLsvmyh8Bi6LsopVkQ4z+hSPYHHicqjv5RG/jdzjUBvF/SAl3Ye+CfJWzqr+r5VoHV26jM7rCOJ0CDdV6jGXuo0sDD5+kVBeA9te/F5/Ym8YwCURSqSDAJcB73ohSN970qwr0EWpoSMzOJZ7nw2TmStimPx5xsFJdacjdcFcBrz+uXdIQtR1zgr1z5jpBtm+K/Cpr/AXqK9nq1GhWih/p2hocaAWr6ldwqmapw+pcun+7RtTDZTcPye8yxSQZQ4QlcSfRyfG36vEUfQT+9w6B6LBzerqGT36sPrrMMA5Ajn3og3wpcvW2sntlhjMPGHqhtDFSrA76yd//He84+rviDOskI0UhHs8SBQAOYaKtQMeI5W5q4Q7KQa0s8I3xGHHirc0sDlQxQbg+6sJkAT0Qqyy8pSIK7SPVuu7wQdBLNb8tOxkBRn0DD5MZN2GRJGrjHBG8Fh7kjl/yUYqlCwTuWQwyHHaCmfxpTt5u6XREIL8g6tNrTBMSa47cEXyAI=
