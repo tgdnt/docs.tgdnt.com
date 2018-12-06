@@ -9,6 +9,7 @@ install:
 script:
 - mkdocs --version
 - "./org-mkdocs.sh"
+- "./deploy.sh"
 branches:
   only:
   - master
